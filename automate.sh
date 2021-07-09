@@ -40,6 +40,7 @@ Available flags:
 	-h | --help					display this help and exit
 	-rv | --showvars			show and test all variables and exit
 
+	-dp | --diskprefix			set the disk prefix
 	-sd | --startdisk			set disk to start plotting from
 	-ed | --enddisk				set disk to end plotting at
 	-i	| --increment			set disk counting (jump n disks)
