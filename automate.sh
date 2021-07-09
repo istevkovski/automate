@@ -124,11 +124,11 @@ init() {
 		if [[ $plotsType == "solo" ]]
 		then
 			echo "Plotting solo plots..."
-			# plotdiskSolo
+			plotdiskSolo
 		elif [[ $plotsType == "pool" ]]
 		then
 			echo "Plotting pool plots..."
-			# plotdiskPool
+			plotdiskPool
 		else
 			echo "Please set a valid plot type."
 			break
