@@ -5,6 +5,7 @@ file="./.env"
 [ -f $file ] && source .env # Source .env if it exists.
 
 # --------------------- Variables ---------------------
+diskPrefix=${DISK_PREFIX:-"d"}
 # Disk to start plotting from
 startDisk=${START_DISK:-1}
 # Disk to end plotting at
@@ -29,8 +30,8 @@ singletonAddress=${SINGLETON_ADDRESS:-"xch1ej3wjx6pwyh800rfev5sw8fgc2u8yvc8rrlye
 # Print the help message
 showHelp() {
 cat << EOF
-Please configure the script fully with all flags on the first run to set her defaults or edit the script
-and change its default values.
+Please configure the script fully with all flags on the first run to set her defaults
+or edit the script and change its default values.
 Once the defaults are set, you can only modify the -sd -ed flags on her next run.
 
 Usage: ${0##*/} [-h] [-rv] [-sd NUM] [-ed NUM] [-i NUM] [-pcn STRING]...
@@ -57,6 +58,7 @@ EOF
 writeEnvDefaultConfiguration() {
 	[ -f $file ] && rm $file # Remove .env if it exists
 	# Write new env variables
+	echo "DISK_PREFIX=\"$diskPrefix\"" >> "$file"
 	echo "START_DISK=$startDisk" >> "$file"
 	echo "END_DISK=$endDisk" >> "$file"
 	echo "INCREMENT=$increment" >> "$file"
@@ -91,16 +93,17 @@ renderLogo() {
 
 # Start plotting disk for pool
 plotdiskPool() {
-	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/d$current/
+	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/$diskPrefix$current/
 }
 
 # Start plotting disk for solo
 plotdiskSolo() {
-	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/d$current/
+	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/$diskPrefix$current/
 }
 
 # Render all variables (for testing)
 renderVariables() {
+	printf "\e[1mDisk Prefix:\e[0m $diskPrefix\n"
 	printf "\e[1mDisk to start from:\e[0m $startDisk\n"
 	printf "\e[1mDisk to end at:\e[0m $endDisk\n"
 	printf "\e[1mIncrement disk by:\e[0m $increment\n"
@@ -148,6 +151,10 @@ while :; do
 		-rv | --showvars) # Render all variables and exit (does not init)
 			renderVariables
 			exit
+			;;
+		-dp | --diskprefix) # Set the disk prefix
+			diskPrefix=$2
+			shift
 			;;
 		-sd | --startdisk) # Set the disk to plot from
 			startDisk=$2
