@@ -37,20 +37,20 @@ Once the defaults are set, you can only modify the -sd -ed flags on her next run
 Usage: ${0##*/} [-h] [-rv] [-sd NUM] [-ed NUM] [-i NUM] [-pcn STRING]...
 
 Available flags:
-	-h | --help					display this help and exit
-	-rv | --showvars			show and test all variables and exit
+	-h   |  --help            display this help and exit
+	-rv  |  --showvars        show and test all variables and exit
 
-	-dp | --diskprefix			set the disk prefix
-	-sd | --startdisk			set disk to start plotting from
-	-ed | --enddisk				set disk to end plotting at
-	-i	| --increment			set disk counting (jump n disks)
-	-pcn | --pcname				set computer name (used for disks ex. /media/{pcname}/{diskname})
-	-tp | --nplots				set number of total plots to make per disk
-	-pt | --plottype			set the plot type "solo" || "pool"
+	-dp  |  --diskprefix      set the disk prefix
+	-sd  |  --startdisk       set disk to start plotting from
+	-ed  |  --enddisk         set disk to end plotting at
+	-i   |  --increment       set disk counting (jump n disks)
+	-pcn |  --pcname          set computer name (used for disks ex. /media/{pcname}/{diskname})
+	-tp  |  --nplots          set number of total plots to make per disk
+	-pt  |  --plottype        set the plot type "solo" || "pool"
 	
-	-fpk | --farmerkey			set farmer public key
-	-ppk | --poolkey			set pool public key
-	-sa | --singletonaddress	set singleton address
+	-fpk |  --farmerkey       set farmer public key
+	-ppk |  --poolkey         set pool public key
+	-sa  |  --singleton       set singleton address
 
 EOF
 }
@@ -190,7 +190,7 @@ while :; do
 			poolPublicKey=$2
 			shift
 			;;
-		-sa | --singletonaddress) # Set Singleton Address
+		-sa | --singleton) # Set Singleton Address
 			singletonAddress=$2
 			shift
 			;;
