@@ -22,9 +22,11 @@ increment=${INCREMENT:-1}
 pcname=${PC_NAME:-"plotter2"}
 # Mounting point
 mountingPoint=${MOUNTING_POINT:-"media"}
-# Number Of Plots
+# Number of Threads
+threads=${NUMBER_OF_THREADS:-`grep -c ^processor /proc/cpuinfo`}
+# Number of Plots
 numberOfPlots=false
-# Type of plots
+# Type of Plots
 isOGPlot=false
 # Farmer Public Key
 farmerPublicKey=${FARMER_PUBLIC_KEY:-"ad909e7e86c7b35373105706c11644f7f29592bdfc971c22088e8f18bf8bfe436a3af935b1193b0d14076715cdfd635b"}
@@ -52,8 +54,10 @@ Available flags:
 	-sd  |  --startdisk       set disk to start plotting from
 	-ed  |  --enddisk         set disk to end plotting at (including it)
 	-i   |  --increment       set disk counting (jump n disks)
+	
 	-pcn |  --pcname          set computer name (used for disks ex. /media/{pcname}/{diskname})
 	-mp  |  --mntpnt          set the disk mounting point (/media or /mnt etc...)
+	-r   |  --threads         set the number of threads to use
 	-tp  |  --nplots          set number of total plots to make per disk
 	-og  |  --ogplot          create og plots (-p mode)
 	
@@ -72,6 +76,7 @@ writeEnvDefaultConfiguration() {
 	echo "INCREMENT=$increment" >> "$file"
 	echo "PC_NAME=\"$pcname\"" >> "$file"
 	echo "MOUNTING_POINT=\"$mountingPoint\"" >> "$file"
+	echo "NUMBER_OF_THREADS=\"$threads\"" >> "$file"
 	echo "FARMER_PUBLIC_KEY=\"$farmerPublicKey\"" >> "$file"
 	echo "POOL_PUBLIC_KEY=\"$poolPublicKey\"" >> "$file"
 	echo "SINGLETON_ADDRESS=\"$singletonAddress\"" >> "$file"
@@ -109,12 +114,12 @@ handleNumberOfPlots() {
 
 # Start plotting disk for pool
 plotdiskPool() {
-	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
+	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r $threads -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
 # Start plotting disk for solo
 plotdiskOG() {
-	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
+	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r $threads -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
 # Render all variables (for testing)
@@ -125,6 +130,7 @@ renderVariables() {
 	printf "\e[1mIncrement disk by:\e[0m $increment\n"
 	printf "\e[1mComputer name:\e[0m $pcname\n"
 	printf "\e[1mDisk mounting point:\e[0m $mountingPoint\n"
+	printf "\e[1mNumber of Threads:\e[0m $threads\n"
 	printf "\e[1mPlotting OG plots:\e[0m $isOGPlot\n"
 	printf "\e[1mFarmer Public Key:\e[0m $farmerPublicKey\n"
 	printf "\e[1mPool Public Key:\e[0m $poolPublicKey\n"
@@ -192,6 +198,10 @@ while :; do
 			;;
 		-mp | --mntpnt) # Set the disk mounting point (/media or /mnt etc...)
 			mountingPoint=$2
+			shift
+			;;
+		-r  | --threads) # Set the disk mounting point (/media or /mnt etc...)
+			threads=$2
 			shift
 			;;
 		-tp | --nplots) # Set number of plots to plot in a single instance
