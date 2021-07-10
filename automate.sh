@@ -13,9 +13,9 @@ file="./.env"
 # --------------------- Variables ---------------------
 diskPrefix=${DISK_PREFIX:-"d"}
 # Disk to start plotting from
-startDisk=${START_DISK:-1}
+startDisk=1
 # Disk to end plotting at
-endDisk=${END_DISK:-1}
+endDisk=startDisk
 # Increment disk by n
 increment=${INCREMENT:-1}
 # Computer Name
@@ -23,9 +23,9 @@ pcname=${PC_NAME:-"plotter2"}
 # Mounting point
 mountingPoint=${MOUNTING_POINT:-"media"}
 # Number Of Plots
-numberOfPlots=${NUMBER_OF_PLOTS:-36}
-# Plots type
-plotsType=${PLOTS_TYPE:-"pool"}
+numberOfPlots=false
+# Type of plots
+isOGPlot=false
 # Farmer Public Key
 farmerPublicKey=${FARMER_PUBLIC_KEY:-"ad909e7e86c7b35373105706c11644f7f29592bdfc971c22088e8f18bf8bfe436a3af935b1193b0d14076715cdfd635b"}
 # Pool Public Key
@@ -39,7 +39,7 @@ singletonAddress=${SINGLETON_ADDRESS:-"xch1ej3wjx6pwyh800rfev5sw8fgc2u8yvc8rrlye
 showHelp() {
 cat << EOF
 Please configure the script fully with all flags on the first run to set her defaults
-or edit the script and change its default values.
+or edit the .env file and change its default values.
 Once the defaults are set, you can only modify the -sd -ed flags on her next run.
 
 Usage: ${0##*/} [-h] [-rv] [-sd NUM] [-ed NUM] [-i NUM] [-pcn STRING]...
@@ -55,7 +55,7 @@ Available flags:
 	-pcn |  --pcname          set computer name (used for disks ex. /media/{pcname}/{diskname})
 	-mp  |  --mntpnt          set the disk mounting point (/media or /mnt etc...)
 	-tp  |  --nplots          set number of total plots to make per disk
-	-pt  |  --plottype        set the plot type "solo" || "pool"
+	-og  |  --ogplot          create og plots (-p mode)
 	
 	-fpk |  --farmerkey       set farmer public key
 	-ppk |  --poolkey         set pool public key
@@ -69,13 +69,9 @@ writeEnvDefaultConfiguration() {
 	[ -f $file ] && rm $file # Remove .env if it exists
 	# Write new env variables
 	echo "DISK_PREFIX=\"$diskPrefix\"" >> "$file"
-	echo "START_DISK=$startDisk" >> "$file"
-	echo "END_DISK=$endDisk" >> "$file"
 	echo "INCREMENT=$increment" >> "$file"
 	echo "PC_NAME=\"$pcname\"" >> "$file"
 	echo "MOUNTING_POINT=\"$mountingPoint\"" >> "$file"
-	echo "NUMBER_OF_PLOTS=$numberOfPlots" >> "$file"
-	echo "PLOTS_TYPE=\"$plotsType\"" >> "$file"
 	echo "FARMER_PUBLIC_KEY=\"$farmerPublicKey\"" >> "$file"
 	echo "POOL_PUBLIC_KEY=\"$poolPublicKey\"" >> "$file"
 	echo "SINGLETON_ADDRESS=\"$singletonAddress\"" >> "$file"
@@ -102,13 +98,22 @@ renderLogo() {
 	defaultPrintColor
 }
 
+# Calculate plots based on disk free space if no custom value is provided
+handleNumberOfPlots() {
+	# If no number of plots is provided, calculate by disk free space
+	if [[ $numberOfPlots -eq false ]]
+	then
+		numberOfPlots=$(( $1 / 109 ))
+	fi
+}
+
 # Start plotting disk for pool
 plotdiskPool() {
 	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
 # Start plotting disk for solo
-plotdiskSolo() {
+plotdiskOG() {
 	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
@@ -119,8 +124,8 @@ renderVariables() {
 	printf "\e[1mDisk to end at:\e[0m $endDisk\n"
 	printf "\e[1mIncrement disk by:\e[0m $increment\n"
 	printf "\e[1mComputer name:\e[0m $pcname\n"
-	printf "\e[1mNumber of plots to create:\e[0m $numberOfPlots\n"
-	printf "\e[1mType of plots to create:\e[0m $plotsType\n"
+	printf "\e[1mDisk mounting point:\e[0m $mountingPoint\n"
+	printf "\e[1mPlotting OG plots:\e[0m $isOGPlot\n"
 	printf "\e[1mFarmer Public Key:\e[0m $farmerPublicKey\n"
 	printf "\e[1mPool Public Key:\e[0m $poolPublicKey\n"
 	printf "\e[1mSingleton Address:\e[0m $singletonAddress\n"
@@ -135,15 +140,18 @@ init() {
 
 	while [[ $current -le $endDisk ]]
 	do
-		if [[ $plotsType == "solo" ]]
+		# Get current disk free space
+		diskFreeSpace=`df --block-size=GB --output=avail /$mountingPoint/$pcname/$diskPrefix$current/ | tail -1 | tr -dc '0-9'`
+		
+		# Calculate number of plots if no user value is present
+		handleNumberOfPlots $diskFreeSpace
+
+		# Handle type of plots to create
+		if [[ $isOGPlot = true ]]
 		then
-			plotdiskSolo
-		elif [[ $plotsType == "pool" ]]
-		then
-			plotdiskPool
+			plotdiskOG
 		else
-			echo "Please set a valid plot type."
-			break
+			plotdiskPool
 		fi
 		current=$(($current + $increment))
 	done
@@ -190,9 +198,8 @@ while :; do
 			numberOfPlots=$2
 			shift
 			;;
-		-pt | --plottype) # Set type of plots to plot (Pool | Solo)
-			plotsType=$2
-			shift
+		-og | --ogplot) # Turn on plotting og plots (-p mode)
+			isOGPlot=true
 			;;
 		-fpk | --farmerkey) # Set Farmer Public Key
 			farmerPublicKey=$2
