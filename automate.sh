@@ -189,7 +189,11 @@ while :; do
 			shift
 			;;
 		-i | --increment) # Increment disks by n
-			increment=$2
+			if [ $2 -gt 0 ]; then
+				increment=$2
+			else
+				increment=1
+			fi
 			shift
 			;;
 		-pcn | --pcname) # Set computer name, used to run disks as: /media/{pcname}/{diskname}
