@@ -1,5 +1,11 @@
 #!/bin/bash
-#Automate your chia plotting
+# -------------------------- Automate --------------------------
+# Automate your chia plotting with Automate!
+# Version: 1.0.4
+# Created by: @natural_i
+# --------------------------------------------------------------
+
+
 # --------------------- Do Not Edit ---------------------
 file="./.env"
 [ -f $file ] && source .env # Source .env if it exists.
@@ -14,6 +20,8 @@ endDisk=${END_DISK:-1}
 increment=${INCREMENT:-1}
 # Computer Name
 pcname=${PC_NAME:-"plotter2"}
+# Mounting point
+mountingPoint=${MOUNTING_POINT:-"media"}
 # Number Of Plots
 numberOfPlots=${NUMBER_OF_PLOTS:-36}
 # Plots type
@@ -42,9 +50,10 @@ Available flags:
 
 	-dp  |  --diskprefix      set the disk prefix
 	-sd  |  --startdisk       set disk to start plotting from
-	-ed  |  --enddisk         set disk to end plotting at
+	-ed  |  --enddisk         set disk to end plotting at (including it)
 	-i   |  --increment       set disk counting (jump n disks)
 	-pcn |  --pcname          set computer name (used for disks ex. /media/{pcname}/{diskname})
+	-mp  |  --mntpnt          set the disk mounting point (/media or /mnt etc...)
 	-tp  |  --nplots          set number of total plots to make per disk
 	-pt  |  --plottype        set the plot type "solo" || "pool"
 	
@@ -64,6 +73,7 @@ writeEnvDefaultConfiguration() {
 	echo "END_DISK=$endDisk" >> "$file"
 	echo "INCREMENT=$increment" >> "$file"
 	echo "PC_NAME=\"$pcname\"" >> "$file"
+	echo "MOUNTING_POINT=\"$mountingPoint\"" >> "$file"
 	echo "NUMBER_OF_PLOTS=$numberOfPlots" >> "$file"
 	echo "PLOTS_TYPE=\"$plotsType\"" >> "$file"
 	echo "FARMER_PUBLIC_KEY=\"$farmerPublicKey\"" >> "$file"
@@ -94,12 +104,12 @@ renderLogo() {
 
 # Start plotting disk for pool
 plotdiskPool() {
-	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/$diskPrefix$current/
+	./chia_plot -f $farmerPublicKey -c $singletonAddress -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
 # Start plotting disk for solo
 plotdiskSolo() {
-	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /media/$pcname/$diskPrefix$current/
+	./chia_plot -f $farmerPublicKey -p $poolPublicKey -n $numberOfPlots -r 16 -u 256 -t /mnt/tmp/ -2 /mnt/tmp/ -d /$mountingPoint/$pcname/$diskPrefix$current/
 }
 
 # Render all variables (for testing)
@@ -170,6 +180,10 @@ while :; do
 			;;
 		-pcn | --pcname) # Set computer name, used to run disks as: /media/{pcname}/{diskname}
 			pcname=$2
+			shift
+			;;
+		-mp | --mntpnt) # Set the disk mounting point (/media or /mnt etc...)
+			mountingPoint=$2
 			shift
 			;;
 		-tp | --nplots) # Set number of plots to plot in a single instance
